@@ -49,7 +49,11 @@ export async function POST(request) {
     return NextResponse.json({ filePath: relativePath });
   } catch (error) {
     console.error('File upload error:', error);
-    return NextResponse.json({ error: `Dosya yüklenirken bir hata oluştu: ${error.message}` }, { status: 500 });
+    const hasToken = !!process.env.BLOB_READ_WRITE_TOKEN;
+    const envKeys = Object.keys(process.env).filter(k => k.includes('BLOB') || k.includes('TOKEN') || k.includes('SUPABASE') || k.includes('KEY'));
+    return NextResponse.json({ 
+      error: `Dosya yüklenirken bir hata oluştu: ${error.message}. (Token var mı: ${hasToken}, Mevcut Değişkenler: ${envKeys.join(', ')})` 
+    }, { status: 500 });
   }
 }
 
