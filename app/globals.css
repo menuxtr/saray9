@@ -36,4 +36,36 @@ html {
   font-family: 'Armstrong', var(--font-cinzel), Georgia, serif;
 }
 
+/* Custom Neon Glow & Pulsing Animations */
+@keyframes goldGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(234, 179, 8, 0.15), 0 0 20px rgba(234, 179, 8, 0.05);
+    border-color: rgba(234, 179, 8, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(234, 179, 8, 0.5), 0 0 35px rgba(234, 179, 8, 0.15);
+    border-color: rgba(234, 179, 8, 0.85);
+  }
+}
+
+@keyframes chipPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
+.animate-gold-glow {
+  animation: goldGlow 3s infinite ease-in-out;
+}
+
+.animate-chip-pulse {
+  animation: chipPulse 2.5s infinite ease-in-out;
+}
+
+
 

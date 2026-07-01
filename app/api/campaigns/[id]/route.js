@@ -7,7 +7,8 @@ export async function PUT(request, { params }) {
     const { 
       title, title_en, title_ar, 
       description, description_en, description_ar, 
-      image, startDate, endDate, isActive 
+      image, startDate, endDate, isActive,
+      price, originalPrice
     } = await request.json();
 
     if (!title) {
@@ -34,6 +35,8 @@ export async function PUT(request, { params }) {
       startDate: startDate !== undefined ? startDate : db.campaigns[index].startDate,
       endDate: endDate !== undefined ? endDate : db.campaigns[index].endDate,
       isActive: isActive !== undefined ? isActive : db.campaigns[index].isActive,
+      price: price !== undefined ? (price !== null ? Number(price) : null) : db.campaigns[index].price,
+      originalPrice: originalPrice !== undefined ? (originalPrice !== null ? Number(originalPrice) : null) : db.campaigns[index].originalPrice,
     };
 
     await writeDB(db);

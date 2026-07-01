@@ -11,7 +11,8 @@ export async function POST(request) {
     const { 
       title, title_en, title_ar, 
       description, description_en, description_ar, 
-      image, startDate, endDate, isActive 
+      image, startDate, endDate, isActive,
+      price, originalPrice
     } = await request.json();
 
     if (!title) {
@@ -30,7 +31,9 @@ export async function POST(request) {
       image: image || '',
       startDate: startDate || '',
       endDate: endDate || '',
-      isActive: isActive !== undefined ? isActive : true
+      isActive: isActive !== undefined ? isActive : true,
+      price: price !== undefined && price !== null ? Number(price) : null,
+      originalPrice: originalPrice !== undefined && originalPrice !== null ? Number(originalPrice) : null
     };
 
     db.campaigns = db.campaigns || [];

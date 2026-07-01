@@ -395,6 +395,23 @@
       "originalPrice": null
     }
   ],
+  "campaigns": [
+    {
+      "id": "c1",
+      "title": "İkili Dürüm Fırsatı",
+      "title_en": "Double Wrap Deal",
+      "title_ar": "عرض اللفافة المزدوجة",
+      "description": "2 adet Tavuk Döner Dürüm ve 2 adet 200ml Ayran sadece 160 TL!",
+      "description_en": "2 Chicken Doner Wraps and 2 Ayran 200ml for only 160 TL!",
+      "description_ar": "٢ لفافة شاورما دجاج و ٢ عيران ٢٠٠ مل بسعر ١٦٠ ليرة فقط!",
+      "image": "/uploads/product-1781685487084.png",
+      "price": 160,
+      "originalPrice": 195,
+      "startDate": "2026-06-01",
+      "endDate": "2030-12-31",
+      "isActive": true
+    }
+  ],
   "settings": {
     "welcomeLogo": "/uploads/product-1781684154787.png",
     "welcomeDesc": "Eşsiz baharatlar ve taze malzemelerle hazırlanan saray lezzetlerine hoş geldiniz.",

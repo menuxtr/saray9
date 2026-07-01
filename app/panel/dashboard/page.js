@@ -39,6 +39,8 @@ export default function Dashboard() {
   const [campaignDescEn, setCampaignDescEn] = useState('');
   const [campaignDescAr, setCampaignDescAr] = useState('');
   const [campaignImage, setCampaignImage] = useState('');
+  const [campaignPrice, setCampaignPrice] = useState('');
+  const [campaignOriginalPrice, setCampaignOriginalPrice] = useState('');
   const [campaignStartDate, setCampaignStartDate] = useState('');
   const [campaignEndDate, setCampaignEndDate] = useState('');
   const [campaignIsActive, setCampaignIsActive] = useState(true);
@@ -616,6 +618,8 @@ export default function Dashboard() {
       setCampaignDescEn(campaign.description_en || '');
       setCampaignDescAr(campaign.description_ar || '');
       setCampaignImage(campaign.image || '');
+      setCampaignPrice(campaign.price !== undefined && campaign.price !== null ? campaign.price.toString() : '');
+      setCampaignOriginalPrice(campaign.originalPrice !== undefined && campaign.originalPrice !== null ? campaign.originalPrice.toString() : '');
       setCampaignStartDate(campaign.startDate || '');
       setCampaignEndDate(campaign.endDate || '');
       setCampaignIsActive(campaign.isActive !== undefined ? campaign.isActive : true);
@@ -627,6 +631,8 @@ export default function Dashboard() {
       setCampaignDescEn('');
       setCampaignDescAr('');
       setCampaignImage('');
+      setCampaignPrice('');
+      setCampaignOriginalPrice('');
       setCampaignStartDate('');
       setCampaignEndDate('');
       setCampaignIsActive(true);
@@ -646,6 +652,8 @@ export default function Dashboard() {
       description_en: campaignDescEn,
       description_ar: campaignDescAr,
       image: campaignImage,
+      price: campaignPrice ? parseFloat(campaignPrice) : null,
+      originalPrice: campaignOriginalPrice ? parseFloat(campaignOriginalPrice) : null,
       startDate: campaignStartDate,
       endDate: campaignEndDate,
       isActive: campaignIsActive,
@@ -1913,6 +1921,27 @@ export default function Dashboard() {
               value={campaignDescAr}
               onChange={(e) => setCampaignDescAr(e.target.value)}
               placeholder="Örn: خصم 10% على جميع لفائف اللحم هذا الأسبوع!"
+            />
+          </div>
+
+          <div className="border-t border-neutral-900/60 pt-4 grid grid-cols-2 gap-4">
+            <FormInput
+              label="Kampanya Fiyatı (TL)"
+              id="campaignPrice"
+              type="number"
+              step="any"
+              value={campaignPrice}
+              onChange={(e) => setCampaignPrice(e.target.value)}
+              placeholder="Örn: 160"
+            />
+            <FormInput
+              label="Eski Fiyat (TL)"
+              id="campaignOriginalPrice"
+              type="number"
+              step="any"
+              value={campaignOriginalPrice}
+              onChange={(e) => setCampaignOriginalPrice(e.target.value)}
+              placeholder="Örn: 195"
             />
           </div>
 

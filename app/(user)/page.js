@@ -47,8 +47,15 @@ export default function Home() {
         setProducts(prods);
         setSettings(settingsData);
         setCampaigns(campaignsData || []);
-        
-        if (cats.length > 0) {
+        const today = new Date().toISOString().split('T')[0];
+        const activeCamps = (campaignsData || []).filter(c => {
+          const isDateActive = (!c.startDate || today >= c.startDate) && (!c.endDate || today <= c.endDate);
+          return c.isActive && isDateActive;
+        });
+
+        if (activeCamps.length > 0) {
+          setActiveCategoryId('campaigns');
+        } else if (cats.length > 0) {
           setActiveCategoryId(cats[0].id);
         }
       } catch (err) {
@@ -67,6 +74,19 @@ export default function Home() {
     return c.isActive && isDateActive;
   });
 
+  const navCategories = activeCampaigns.length > 0
+    ? [
+        {
+          id: 'campaigns',
+          name: '🔥 Fırsatlar',
+          name_en: '🔥 Offers',
+          name_ar: '🔥 العروض',
+          icon: 'Flame'
+        },
+        ...categories
+      ]
+    : categories;
+
   // Campaign Carousel Auto-rotation
   useEffect(() => {
     if (activeCampaigns.length <= 1) return;
@@ -79,13 +99,13 @@ export default function Home() {
   // Update active category on scroll
   useEffect(() => {
     const handleScroll = () => {
-      if (isScrolling || categories.length === 0) return;
+      if (isScrolling || navCategories.length === 0) return;
 
       const scrollPosition = window.scrollY + 140; // Offset for sticky navbar
       
       // Find which category section is currently in viewport
-      for (let i = 0; i < categories.length; i++) {
-        const category = categories[i];
+      for (let i = 0; i < navCategories.length; i++) {
+        const category = navCategories[i];
         const el = document.getElementById(`category-sec-${category.id}`);
         if (el) {
           const top = el.offsetTop;
@@ -101,7 +121,7 @@ export default function Home() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [categories, isScrolling]);
+  }, [navCategories, isScrolling]);
 
   const handleCategorySelect = (categoryId) => {
     setIsScrolling(true);
@@ -128,6 +148,30 @@ export default function Home() {
     }
   };
 
+  const handleScrollToCampaign = (campaignId) => {
+    setIsScrolling(true);
+    setActiveCategoryId('campaigns');
+    
+    // Smooth scroll to the campaigns section
+    const el = document.getElementById('category-sec-campaigns');
+    if (el) {
+      const offset = 100; // sticky header offset
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = el.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+      
+      setTimeout(() => {
+        setIsScrolling(false);
+      }, 800);
+    }
+  };
+
   const handleWelcomeCategoryClick = (categoryId) => {
     // First scroll to the menu section
     if (menuSectionRef.current) {
@@ -135,7 +179,11 @@ export default function Home() {
     }
     // Then active category after scroll completes
     setTimeout(() => {
-      handleCategorySelect(categoryId);
+      if (categoryId === 'campaigns') {
+        handleScrollToCampaign(categoryId);
+      } else {
+        handleCategorySelect(categoryId);
+      }
     }, 400);
   };
 
@@ -318,9 +366,17 @@ export default function Home() {
                 >
                   {activeCampaigns.map((camp) => (
                     <div key={camp.id} className="w-full flex-shrink-0 px-2 select-none">
-                      <div className="bg-neutral-900/80 border border-neutral-800/80 rounded-2xl p-4 flex gap-4 items-center backdrop-blur-md shadow-xl h-28">
+                      <div className="bg-neutral-950/90 border border-amber-500/50 animate-gold-glow rounded-3xl p-4 flex gap-4 items-center backdrop-blur-md shadow-xl relative min-h-[140px] text-white">
+                        
+                        {/* Top-right/left discount percentage badge */}
+                        {camp.price && camp.originalPrice && (
+                          <div className={`absolute top-3 ${language === 'ar' ? 'left-3' : 'right-3'} bg-red-600 text-[8px] font-black text-white px-2 py-0.5 rounded-md uppercase tracking-wider shadow-md z-10`}>
+                            {language === 'en' ? 'OFF' : language === 'ar' ? 'خصم' : 'İNDİRİM'} %{Math.round(((camp.originalPrice - camp.price) / camp.originalPrice) * 100)}
+                          </div>
+                        )}
+
                         {camp.image && (
-                          <div className="w-20 h-20 rounded-xl overflow-hidden bg-neutral-950 border border-neutral-800 flex-shrink-0">
+                          <div className="w-20 h-20 rounded-xl overflow-hidden bg-neutral-900 border border-neutral-800 flex-shrink-0 shadow-inner">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={camp.image} alt={camp.title} className="w-full h-full object-cover" />
                           </div>
@@ -329,9 +385,33 @@ export default function Home() {
                           <h5 className="text-xs font-extrabold text-white truncate">
                             {getTranslation(camp, 'title', language)}
                           </h5>
-                          <p className="text-[11px] text-neutral-400 line-clamp-2 leading-relaxed mt-1">
+                          <p className="text-[11px] text-neutral-300 line-clamp-2 leading-relaxed mt-1">
                             {getTranslation(camp, 'description', language)}
                           </p>
+
+                          {/* Price & Action Button Row */}
+                          <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
+                            {camp.price && (
+                              <div className="flex items-baseline gap-1.5">
+                                <span className="text-xs font-extrabold text-amber-400 font-sans">
+                                  {camp.price} TL
+                                </span>
+                                {camp.originalPrice && (
+                                  <span className="text-[10px] font-bold text-neutral-500 line-through font-sans">
+                                    {camp.originalPrice} TL
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            
+                            <button
+                              onClick={() => handleScrollToCampaign(camp.id)}
+                              className="text-[9px] font-extrabold text-amber-400 hover:text-amber-300 flex items-center gap-1 group/btn transition-colors duration-200"
+                            >
+                              <span>{language === 'en' ? 'View Deal' : language === 'ar' ? 'عرض التفاصيل' : 'Fırsatı İncele'}</span>
+                              <span className="group-hover/btn:translate-x-0.5 transition-transform">{arrowSymbol}</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -358,7 +438,7 @@ export default function Home() {
 
           {/* Categories Grid/List */}
           <div className="w-full space-y-3">
-            {categories.map((category) => (
+            {navCategories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => handleWelcomeCategoryClick(category.id)}
@@ -435,10 +515,10 @@ export default function Home() {
           </div>
 
           {/* Sticky Category Bar Component */}
-          {categories.length > 0 && !searchQuery && (
+          {navCategories.length > 0 && !searchQuery && (
             <div className="mb-6 -mx-4">
               <Navbar 
-                categories={categories} 
+                categories={navCategories} 
                 activeCategoryId={activeCategoryId} 
                 onCategorySelect={handleCategorySelect}
                 language={language}
@@ -448,7 +528,82 @@ export default function Home() {
 
           {/* Products List Grouped by Category */}
           <div className="space-y-8 mt-4">
-            {categories.map((category) => {
+            {navCategories.map((category) => {
+              if (category.id === 'campaigns') {
+                return (
+                  <div
+                    key="campaigns-sec"
+                    id="category-sec-campaigns"
+                    className="scroll-mt-24"
+                  >
+                    {/* Category Title Header */}
+                    <div className="flex items-center gap-2 mb-4 border-b border-neutral-200/50 pb-2">
+                      <div className="p-1.5 rounded-lg bg-neutral-900 text-red-500 shadow-sm animate-pulse">
+                        <CategoryIcon name="Flame" size={15} />
+                      </div>
+                      <h3 className="text-md font-bold text-red-600 tracking-wide uppercase">
+                        {getTranslation(category, 'name', language)}
+                      </h3>
+                    </div>
+
+                    {/* Campaigns Grid */}
+                    <div className="grid grid-cols-1 gap-4">
+                      {activeCampaigns.map((camp) => (
+                        <div
+                          key={camp.id}
+                          id={`campaign-item-${camp.id}`}
+                          className="bg-neutral-950/95 border border-amber-500/50 animate-gold-glow rounded-3xl p-5 flex gap-4 items-center backdrop-blur-md shadow-2xl relative min-h-[140px] text-white overflow-hidden"
+                        >
+                          {/* Top-right/left discount percentage badge */}
+                          {camp.price && camp.originalPrice && (
+                            <div className={`absolute top-3 ${language === 'ar' ? 'left-3' : 'right-3'} bg-red-600 text-[9px] font-black text-white px-2.5 py-1 rounded-md uppercase tracking-wider shadow-md z-10`}>
+                              {language === 'en' ? 'OFF' : language === 'ar' ? 'خصم' : 'İNDİRİM'} %{Math.round(((camp.originalPrice - camp.price) / camp.originalPrice) * 100)}
+                            </div>
+                          )}
+
+                          {camp.image && (
+                            <div className="w-24 h-24 rounded-2xl overflow-hidden bg-neutral-900 border border-neutral-800 flex-shrink-0 relative shadow-inner">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={camp.image}
+                                alt={camp.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          )}
+
+                          <div className="flex-1 min-w-0" style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                            <span className="inline-block text-[9px] font-bold text-amber-500 uppercase tracking-widest mb-1">
+                              {language === 'en' ? 'Special Deal' : language === 'ar' ? 'عرض خاص' : 'Dönemsel Fırsat'}
+                            </span>
+                            <h4 className="text-sm font-extrabold text-white truncate">
+                              {getTranslation(camp, 'title', language)}
+                            </h4>
+                            <p className="text-[11px] text-neutral-300 line-clamp-2 leading-relaxed mt-1">
+                              {getTranslation(camp, 'description', language)}
+                            </p>
+                            
+                            {/* Price Section */}
+                            {camp.price && (
+                              <div className="flex items-baseline gap-2 mt-2">
+                                <span className="text-md font-extrabold text-amber-400 font-sans">
+                                  {camp.price} TL
+                                </span>
+                                {camp.originalPrice && (
+                                  <span className="text-xs font-bold text-neutral-500 line-through font-sans">
+                                    {camp.originalPrice} TL
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+
               // Get products under this category
               const categoryProducts = filteredProducts.filter(p => p.categoryId === category.id);
               
