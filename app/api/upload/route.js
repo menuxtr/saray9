@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { put } from '@vercel/blob';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export async function POST(request) {
   try {
@@ -22,12 +25,52 @@ export async function POST(request) {
     const fileExtension = path.extname(file.name) || '.jpg';
     const fileName = `product-${Date.now()}${fileExtension}`;
 
-    // Check if Vercel Blob is configured (supports static token or OIDC on Vercel)
-    if (process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID) {
-      const blob = await put(fileName, file, {
-        access: 'public',
+    // If Supabase is configured, upload to Supabase Storage (Production)
+    if (supabaseUrl && supabaseKey) {
+      const supabase = createClient(supabaseUrl, supabaseKey, {
+        auth: { persistSession: false }
       });
-      return NextResponse.json({ filePath: blob.url });
+
+      // Ensure 'uploads' bucket exists and is public
+      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+      if (listError) {
+        throw new Error(`Supabase bucket listesi alınamadı: ${listError.message}`);
+      }
+
+      const bucketExists = buckets && buckets.some(b => b.id === 'uploads');
+      if (!bucketExists) {
+        const { error: createError } = await supabase.storage.createBucket('uploads', {
+          public: true,
+          allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
+          fileSizeLimit: 2097152 // 2MB
+        });
+        if (createError) {
+          throw new Error(`Supabase bucket oluşturulamadı: ${createError.message}`);
+        }
+      }
+
+      // Convert file to buffer for upload
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      // Upload file to 'uploads' bucket
+      const { error: uploadError } = await supabase.storage
+        .from('uploads')
+        .upload(fileName, buffer, {
+          contentType: file.type || 'image/jpeg',
+          upsert: true
+        });
+
+      if (uploadError) {
+        throw new Error(`Supabase'e dosya yüklenemedi: ${uploadError.message}`);
+      }
+
+      // Get public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('uploads')
+        .getPublicUrl(fileName);
+
+      return NextResponse.json({ filePath: publicUrlData.publicUrl });
     }
 
     // Local Fallback (Development)
@@ -49,10 +92,8 @@ export async function POST(request) {
     return NextResponse.json({ filePath: relativePath });
   } catch (error) {
     console.error('File upload error:', error);
-    const hasToken = !!process.env.BLOB_READ_WRITE_TOKEN;
-    const envKeys = Object.keys(process.env).filter(k => k.includes('BLOB') || k.includes('TOKEN') || k.includes('SUPABASE') || k.includes('KEY'));
     return NextResponse.json({ 
-      error: `Dosya yüklenirken bir hata oluştu: ${error.message}. (Token var mı: ${hasToken}, Mevcut Değişkenler: ${envKeys.join(', ')})` 
+      error: `Dosya yüklenirken bir hata oluştu: ${error.message}` 
     }, { status: 500 });
   }
 }
