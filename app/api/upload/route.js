@@ -22,8 +22,8 @@ export async function POST(request) {
     const fileExtension = path.extname(file.name) || '.jpg';
     const fileName = `product-${Date.now()}${fileExtension}`;
 
-    // Check if Vercel Blob is configured (Production)
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
+    // Check if Vercel Blob is configured (supports static token or OIDC on Vercel)
+    if (process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID) {
       const blob = await put(fileName, file, {
         access: 'public',
       });
