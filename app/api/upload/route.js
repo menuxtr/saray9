@@ -49,7 +49,7 @@ export async function POST(request) {
     return NextResponse.json({ filePath: relativePath });
   } catch (error) {
     console.error('File upload error:', error);
-    return NextResponse.json({ error: 'Dosya yüklenirken bir hata oluştu.' }, { status: 500 });
+    return NextResponse.json({ error: `Dosya yüklenirken bir hata oluştu: ${error.message}` }, { status: 500 });
   }
 }
 
